@@ -1,3 +1,6 @@
+include <GIT_VERSION.scad>
+echo("GIT_BUILD", GIT_BUILD);
+
 // --- CONFIGURABLE PARAMETERS ---
 $fn = 100;          // Smoothness of the circle (number of fragments)
 height = 205;       // Total height of the tube (X height) including marker
@@ -10,14 +13,15 @@ marker_outer_radius = 48/2;
 // -- advanced --
 degrees_per_mm = 0.75;  // spike degrees to twist for every 1mm of height
 spike_power = 300;  // Higher number = narrower/pointier needles
-spike_transition_factor = 0.33; // What percentage of the tube will have transitional ribs
+transition_length = 0.33*height; // how long is the spike transition
 slices_per_mm = 2;
 
 // --- CALCULATION FOR TRANSITION ---
-transition_height = height * spike_transition_factor;
-marker_start_height = height - marker_height;
+transition_height = height-transition_length;
 slices = height * slices_per_mm;
 slice_thickness = height / slices; 
+
+
 
 module tube(){
     // form tube using individual stacked slices every slice_thickness mm (z)
@@ -27,7 +31,7 @@ module tube(){
         
         // dynamic spike depth for this specific height
         // linearly increases from 0 to spike_depth over the transition zone, then stays constant
-        current_depth = (z < transition_height) ? (spike_depth * (z / transition_height)) : spike_depth;
+        current_depth = (z > transition_height) ? (spike_depth * ( (height-z) / transition_length)) : spike_depth;
         
         // extrude and position this specific thin slice
         translate([0, 0, z])
@@ -35,7 +39,7 @@ module tube(){
         linear_extrude(height = slice_thickness, convexity = 10) {
             difference() {
                 // outer radius
-                circle(r = (z < marker_start_height) ? outer_radius : marker_outer_radius);
+                circle(r = (z > marker_height) ? outer_radius : marker_outer_radius);
                 
                 // inner spiked radius
                 spiked_circle(inner_radius, current_depth, spike_power);
