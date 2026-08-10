@@ -1,6 +1,6 @@
 // --- CONFIGURABLE PARAMETERS ---
 $fn = 100;          // Smoothness of the circle (number of fragments)
-height = 206.1;       // Total height of the tube (X height) including marker
+height = 205;       // Total height of the tube (X height) including marker
 outer_radius = 41.1/2;  // sleeve outside diameter / 2
 inner_radius = 35/2;    // sleeve inside diameter / 2
 spike_depth = 3;    // How deep the spikes go inward (at maximum)
@@ -11,7 +11,7 @@ marker_outer_radius = 48/2;
 degrees_per_mm = 0.75;  // spike degrees to twist for every 1mm of height
 spike_power = 300;  // Higher number = narrower/pointier needles
 spike_transition_factor = 0.33; // What percentage of the tube will have transitional ribs
-slices_per_mm = 0.4;
+slices_per_mm = 2;
 
 // --- CALCULATION FOR TRANSITION ---
 transition_height = height * spike_transition_factor;
