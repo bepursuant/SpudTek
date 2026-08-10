@@ -11,9 +11,12 @@ marker_height = 10; // How long the marker is at the end of the barrel
 marker_outer_radius = 48/2;
 
 branch_text = GIT_BUILD;
+branch_text_size   = 4.5;  // Font height in mm (must fit inside marker_height)
+branch_text_depth  = 0.4;  // Distance text extends past marker radius (mm)
+
 brand_text = "SpudTek";
-text_size   = 4.5;  // Font height in mm (must fit inside marker_height)
-text_depth  = 0.2;  // Distance text extends past marker radius (mm)
+brand_text_size=7.5;
+brand_text_depth = 0.6;
 
 // -- advanced --
 degrees_per_mm = 0.75;  // spike degrees to twist for every 1mm of height
@@ -73,7 +76,7 @@ module marker_text(str_val, radius, font_size, depth) {
     num_chars = len(str_val);
     
     // Calculate arc angle per character based on average letter width (approx 0.6 * font_size)
-    char_width_approx = font_size * 0.7;
+    char_width_approx = font_size * 0.6;
     step_angle = (char_width_approx / radius) * (180 / PI); 
     
     start_angle = -(num_chars - 1) * step_angle / 2; // Center string at angle 0
@@ -104,18 +107,18 @@ if (render_mode == "embossed") {
     // Raised text fused to the tube body
     union() {
         tube();
-        marker_text(branch_text, marker_outer_radius, text_size, text_depth);
+        marker_text(branch_text, marker_outer_radius, branch_text_size, branch_text_depth);
     }
 } else if (render_mode == "engraved") {
     // Inset text carved into the marker wall
     difference() {
         tube();
-        marker_text(branch_text, marker_outer_radius + 0.1, text_size, text_depth);
+        marker_text(branch_text, marker_outer_radius + 0.1, branch_text_size, branch_text_depth);
         rotate([0, 0, 180]){
-            marker_text(brand_text, marker_outer_radius + 0.1, text_size, text_depth);
+            marker_text(brand_text, marker_outer_radius + 0.1, brand_text_size, brand_text_depth);
         }
     }
 } else if (render_mode == "text_only") {
     // Export this pass separately for multi-color (MMU / AMS) printing
-    marker_text(branch_text, marker_outer_radius, text_size, text_depth);
+    marker_text(branch_text, marker_outer_radius, branch_text_size, branch_text_depth);
 }
