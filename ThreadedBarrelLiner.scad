@@ -2,15 +2,13 @@ include <GIT_VERSION.scad>
 echo("GIT_BUILD", GIT_BUILD);
 
 // --- CONFIGURABLE PARAMETERS ---
-$fn = 100;          // Smoothness of the circle (number of fragments)
+$fn = 300;          // Smoothness of the circle (number of fragments)
 height = 205;       // Total height of the tube (X height) including marker
 outer_radius = 41.1/2;  // sleeve outside diameter / 2
 inner_radius = 35/2;    // sleeve inside diameter / 2
 spike_depth = 3;    // How deep the spikes go inward (at maximum)
 marker_height = 10; // How long the marker is at the end of the barrel
 marker_outer_radius = 48/2;
-
-text_extend_depth = 0.3;
 
 
 
@@ -52,18 +50,6 @@ module tube(){
     }
 }
 
-module clean_tube(){
-    intersection(){
-        tube();
-        union(){
-            cylinder(r=outer_radius, h=height);
-            cylinder(r=marker_outer_radius, h=marker_height);
-        }
-
-    }
-
-}
-
 // make a 4 spiked circle
 module spiked_circle(R, A, power) {
     polygon(points = [
@@ -80,7 +66,7 @@ module spiked_circle(R, A, power) {
 
 
 // Curved radial text module wrapped around the outer wall
-module marker_text(str_val, radius, rotation, font, size, font_spacing, depth) {
+module marker_text(str_val, radius, rotation, font, size, font_spacing) {
     num_chars = len(str_val);
     
     // Calculate arc angle per character based on average letter width (approx 0.6 * font_size)
@@ -95,9 +81,9 @@ module marker_text(str_val, radius, rotation, font, size, font_spacing, depth) {
         rotate([0, 0, angle + rotation])
             // Embed 0.2mm into wall for manifold geometry
 
-            translate([radius - 0.2, 0, (marker_height / 2) - (char_width_approx/2)])
+            translate([radius - 0.5, 0, (marker_height / 2) - (char_width_approx/2)])
                 rotate([90, 0, 90])
-                    linear_extrude(height = depth + text_extend_depth)
+                    linear_extrude(height = 1)
                         text(
                             str(str_val[i]), 
                             size = size, 
@@ -108,22 +94,27 @@ module marker_text(str_val, radius, rotation, font, size, font_spacing, depth) {
     }
 }
 
-// --- RENDER SELECTION ---
 
-union()
+module brandmark()
 {
-    color("Orange")
-        clean_tube();
-
     color("White")
     {
-        intersection(){
-            cylinder(r = marker_outer_radius, h = marker_height);
-            union(){
-                marker_text(GIT_VERSION, marker_outer_radius, 90, "Consolas", 3.5, 0.7, 0);
-                marker_text("spudtek", marker_outer_radius, 270, "Liberation Sans:style=Bold", 6.4, 0.75, 0);
-            }
-        }
+        marker_text(GIT_VERSION, marker_outer_radius, 90, "Consolas", 3.5, 0.7);
+        marker_text("spudtek", marker_outer_radius, 270, "Liberation Sans:style=Bold", 6.4, 0.75);
     }
 }
 
+
+union(){
+    color("orange")
+        tube();
+
+    color("white")
+        brandmark();
+
+}
+
+
+
+            // cylinder(r=outer_radius, h=height);
+            // cylinder(r=marker_outer_radius, h=marker_height);
