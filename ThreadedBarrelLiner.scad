@@ -10,13 +10,9 @@ spike_depth = 3;    // How deep the spikes go inward (at maximum)
 marker_height = 10; // How long the marker is at the end of the barrel
 marker_outer_radius = 48/2;
 
-branch_text = GIT_BUILD;
-branch_text_size   = 4.5;  // Font height in mm (must fit inside marker_height)
-branch_text_depth  = 0.75;  // Distance text extends past marker radius (mm)
+text_extend_depth = 0.3;
 
-brand_text = "SpudTek";
-brand_text_size=7.5;
-brand_text_depth = 5;
+
 
 // -- advanced --
 degrees_per_mm = 0.75;  // spike degrees to twist for every 1mm of height
@@ -47,13 +43,25 @@ module tube(){
         linear_extrude(height = slice_thickness, convexity = 10) {
             difference() {
                 // outer radius
-                circle(r = (z > marker_height) ? outer_radius : marker_outer_radius);
+                circle(r = (z > marker_height) ? outer_radius + 0.1 : marker_outer_radius + 0.1);
                 
                 // inner spiked radius
                 spiked_circle(inner_radius, current_depth, spike_power);
             }
         }
     }
+}
+
+module clean_tube(){
+    intersection(){
+        tube();
+        union(){
+            cylinder(r=outer_radius, h=height);
+            cylinder(r=marker_outer_radius, h=marker_height);
+        }
+
+    }
+
 }
 
 // make a 4 spiked circle
@@ -72,11 +80,11 @@ module spiked_circle(R, A, power) {
 
 
 // Curved radial text module wrapped around the outer wall
-module marker_text(str_val, radius, font_size, depth) {
+module marker_text(str_val, radius, rotation, font, size, font_spacing, depth) {
     num_chars = len(str_val);
     
     // Calculate arc angle per character based on average letter width (approx 0.6 * font_size)
-    char_width_approx = font_size * 0.6;
+    char_width_approx = size * font_spacing;
     step_angle = (char_width_approx / radius) * (180 / PI); 
     
     start_angle = -(num_chars - 1) * step_angle / 2; // Center string at angle 0
@@ -84,41 +92,38 @@ module marker_text(str_val, radius, font_size, depth) {
     for (i = [0 : num_chars - 1]) {
         angle = start_angle + (i * step_angle);
         
-        rotate([0, 0, angle])
+        rotate([0, 0, angle + rotation])
             // Embed 0.2mm into wall for manifold geometry
+
             translate([radius - 0.2, 0, (marker_height / 2) - (char_width_approx/2)])
                 rotate([90, 0, 90])
-                    linear_extrude(height = depth + 0.2)
+                    linear_extrude(height = depth + text_extend_depth)
                         text(
                             str(str_val[i]), 
-                            size = font_size, 
+                            size = size, 
                             halign = "center", 
                             valign = "baseline", 
-                            font = "Consolas"
+                            font = font
                         );
     }
 }
 
 // --- RENDER SELECTION ---
-// Mode options: "embossed", "engraved", "dual_color", "text_only"
-render_mode = "engraved"; 
 
-if (render_mode == "embossed") {
-    // Raised text fused to the tube body
-    union() {
-        tube();
-        marker_text(branch_text, marker_outer_radius, branch_text_size, branch_text_depth);
+union()
+{
+    color("Orange")
+        clean_tube();
+
+    color("White")
+    {
+        intersection(){
+            cylinder(r = marker_outer_radius, h = marker_height);
+            union(){
+                marker_text(GIT_VERSION, marker_outer_radius, 90, "Consolas", 3.5, 0.7, 0);
+                marker_text("spudtek", marker_outer_radius, 270, "Liberation Sans:style=Bold", 6.4, 0.75, 0);
+            }
+        }
     }
-} else if (render_mode == "engraved") {
-    // Inset text carved into the marker wall
-    difference() {
-        tube();
-        rotate([0, 0, 270])
-            marker_text(branch_text, marker_outer_radius + 0.1, branch_text_size, branch_text_depth);
-        rotate([0, 0, 90])
-            marker_text(brand_text, marker_outer_radius + 0.1, brand_text_size, brand_text_depth);
-    }
-} else if (render_mode == "text_only") {
-    // Export this pass separately for multi-color (MMU / AMS) printing
-    marker_text(branch_text, marker_outer_radius, branch_text_size, branch_text_depth);
 }
+
