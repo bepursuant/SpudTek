@@ -2,7 +2,7 @@ include <GIT_VERSION.scad>
 echo("GIT_BUILD", GIT_BUILD);
 
 // --- CONFIGURABLE PARAMETERS --- 
-$fn = 100; // Smoothness of the circle (number of fragments)
+$fn = 300; // Smoothness of the circle (number of fragments)
 height = 205; // Total height of the tube (X height) including marker
 outer_radius = 41.1 / 2; // sleeve outside diameter / 2
 inner_radius = 35 / 2; // sleeve inside diameter / 2
@@ -21,7 +21,7 @@ text_protrusion = 0.05;
 // serial number (git version)
 serial_text = GIT_VERSION;
 serial_rotation = 90;
-serial_font = "Consolas";
+serial_font = "Bahnschrift";
 serial_font_size = 3.5;
 serial_font_spacing = 0.7;
 
@@ -111,10 +111,12 @@ module marker_text(str_val, radius, rotation, font, font_size, font_spacing, dep
 
 module marker() {
   intersection() {
+    // rendered text
     union() {
       marker_text(serial_text, marker_outer_radius, serial_rotation, serial_font, serial_font_size, serial_font_spacing);
       marker_text(brand_text, marker_outer_radius, brand_rotation, brand_font, brand_font_size, brand_font_spacing);
     }
+    // cut to desired text thickness with a tube
     difference() {
       cylinder(h=marker_height, r=marker_outer_radius + text_protrusion);
       cylinder(h=marker_height, r=marker_outer_radius - text_depth);
@@ -122,8 +124,18 @@ module marker() {
   }
 }
 
-color("orange")
+module coupler() {
+  translate([0, 0, height])
+    difference() {
+      cylinder(h=coupler_height, r=outer_radius);
+      cylinder(h=coupler_height, r=coupler_inner_radius);
+    }
+}
+
+color("orange") {
   tube();
+  coupler();
+}
 
 color("white")
   marker();
