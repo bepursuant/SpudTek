@@ -20,14 +20,15 @@ text_protrusion = 0.05;
 
 // serial number (git version)
 serial_text = GIT_VERSION;
-serial_rotation = 90;
+serial_rotation = 180;
 serial_font = "Bahnschrift";
 serial_font_size = 3.5;
 serial_font_spacing = 0.7;
 
 // branding
 brand_text = "SPUDTEK";
-brand_rotation = 270;
+brand_rotation = -70;
+brand_rotation2 = 70;
 brand_font = "Liberation Sans:style=Bold";
 brand_font_size = 6.4;
 brand_font_spacing = 0.75;
@@ -115,6 +116,7 @@ module marker() {
     union() {
       marker_text(serial_text, marker_outer_radius, serial_rotation, serial_font, serial_font_size, serial_font_spacing);
       marker_text(brand_text, marker_outer_radius, brand_rotation, brand_font, brand_font_size, brand_font_spacing);
+      marker_text(brand_text, marker_outer_radius, brand_rotation2, brand_font, brand_font_size, brand_font_spacing);
     }
     // cut to desired text thickness with a tube
     difference() {
