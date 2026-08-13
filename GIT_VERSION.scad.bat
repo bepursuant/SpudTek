@@ -2,7 +2,7 @@
 
 ECHO GENERATING GIT_VERSION
 
-FOR /F "delims=" %%i IN ('git describe --tags --always --dirty') DO SET "GIT_VERSION=%%i"
+FOR /F "delims=" %%i IN ('git describe --tags --always --dirty --long') DO SET "GIT_VERSION=%%i"
 FOR /F "delims=" %%i IN ('git rev-parse --abbrev-ref HEAD') DO SET "GIT_BRANCH=%%i"
 
 SET "GIT_VERSION=%GIT_VERSION%"
