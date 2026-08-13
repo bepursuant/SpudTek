@@ -11,6 +11,25 @@ marker_height = 10; // How long the marker is at the end of the barrel
 marker_outer_radius = 48/2;
 
 
+// brandmark
+branch_text = GIT_VERSION;
+branch_rotation = 90;
+branch_font = "Consolas";
+branch_font_size = 3.5;
+branch_font_spacing = 0.7;
+branch_font_depth = 2;
+branch_font_protrusion = 0.1;
+
+
+brand_text = "spudtek";
+brand_rotation = 270;
+brand_font = "Liberation Sans:style=Bold";
+brand_font_size = 6.4;
+brand_font_spacing = 0.75;
+brand_font_depth = 2;
+brand_font_protrusion = 0.1;
+
+
 
 // -- advanced --
 degrees_per_mm = 0.75;  // spike degrees to twist for every 1mm of height
@@ -37,16 +56,16 @@ module tube(){
         
         // extrude and position this specific thin slice
         translate([0, 0, z])
-        rotate([0, 0, current_twist])
-        linear_extrude(height = slice_thickness, convexity = 10) {
-            difference() {
-                // outer radius
-                circle(r = (z > marker_height) ? outer_radius + 0.1 : marker_outer_radius + 0.1);
-                
-                // inner spiked radius
-                spiked_circle(inner_radius, current_depth, spike_power);
-            }
-        }
+            rotate([0, 0, current_twist])
+                linear_extrude(height = slice_thickness, convexity = 10) {
+                    difference() {
+                        // outer radius
+                        circle(r = (z > marker_height) ? outer_radius : marker_outer_radius);
+                        
+                        // inner spiked radius
+                        spiked_circle(inner_radius, current_depth, spike_power);
+                    }
+                }
     }
 }
 
@@ -66,27 +85,27 @@ module spiked_circle(R, A, power) {
 
 
 // Curved radial text module wrapped around the outer wall
-module marker_text(str_val, radius, rotation, font, size, font_spacing) {
+module marker_text(str_val, radius, rotation, font, font_size, font_spacing, depth, protrusion) {
     num_chars = len(str_val);
     
     // Calculate arc angle per character based on average letter width (approx 0.6 * font_size)
-    char_width_approx = size * font_spacing;
+    char_width_approx = font_size * font_spacing;
     step_angle = (char_width_approx / radius) * (180 / PI); 
     
     start_angle = -(num_chars - 1) * step_angle / 2; // Center string at angle 0
+
+    h = depth + protrusion;
 
     for (i = [0 : num_chars - 1]) {
         angle = start_angle + (i * step_angle);
         
         rotate([0, 0, angle + rotation])
-            // Embed 0.2mm into wall for manifold geometry
-
-            translate([radius - 0.5, 0, (marker_height / 2) - (char_width_approx/2)])
+            translate([radius - depth, 0, (marker_height / 2) - (char_width_approx/2)])
                 rotate([90, 0, 90])
-                    linear_extrude(height = 1)
+                    linear_extrude(height = depth + protrusion)
                         text(
                             str(str_val[i]), 
-                            size = size, 
+                            size = font_size, 
                             halign = "center", 
                             valign = "baseline", 
                             font = font
@@ -97,22 +116,19 @@ module marker_text(str_val, radius, rotation, font, size, font_spacing) {
 
 module brandmark()
 {
-    color("White")
-    {
-        marker_text(GIT_VERSION, marker_outer_radius, 90, "Consolas", 3.5, 0.7);
-        marker_text("spudtek", marker_outer_radius, 270, "Liberation Sans:style=Bold", 6.4, 0.75);
+    union(){
+        marker_text(branch_text, marker_outer_radius, branch_rotation, branch_font, branch_font_size, branch_font_spacing, branch_font_depth, branch_font_protrusion);
+        marker_text(brand_text, marker_outer_radius, brand_rotation, brand_font, brand_font_size, brand_font_spacing, branch_font_depth, branch_font_protrusion);
     }
 }
 
 
-union(){
-    color("orange")
-        tube();
+ color("orange", )
+    tube();
 
-    color("white")
-        brandmark();
+color("white")
+    brandmark();
 
-}
 
 
 
