@@ -17,7 +17,7 @@ branch_rotation = 90;
 branch_font = "Consolas";
 branch_font_size = 3.5;
 branch_font_spacing = 0.7;
-branch_font_depth = 2;
+branch_font_depth = 1;
 branch_font_protrusion = 0.1;
 
 
@@ -26,7 +26,7 @@ brand_rotation = 270;
 brand_font = "Liberation Sans:style=Bold";
 brand_font_size = 6.4;
 brand_font_spacing = 0.75;
-brand_font_depth = 2;
+brand_font_depth = 1;
 brand_font_protrusion = 0.1;
 
 
@@ -114,23 +114,13 @@ module marker_text(str_val, radius, rotation, font, font_size, font_spacing, dep
 }
 
 
-module brandmark()
-{
-    union(){
-        marker_text(branch_text, marker_outer_radius, branch_rotation, branch_font, branch_font_size, branch_font_spacing, branch_font_depth, branch_font_protrusion);
-        marker_text(brand_text, marker_outer_radius, brand_rotation, brand_font, brand_font_size, brand_font_spacing, branch_font_depth, branch_font_protrusion);
-    }
-}
 
 
- color("orange", )
+color("orange")
     tube();
 
 color("white")
-    brandmark();
-
-
-
-
-            // cylinder(r=outer_radius, h=height);
-            // cylinder(r=marker_outer_radius, h=marker_height);
+{
+    marker_text(branch_text, marker_outer_radius, branch_rotation, branch_font, branch_font_size, branch_font_spacing, branch_font_depth, branch_font_protrusion);
+    marker_text(brand_text, marker_outer_radius, brand_rotation, brand_font, brand_font_size, brand_font_spacing, branch_font_depth, branch_font_protrusion);
+}
