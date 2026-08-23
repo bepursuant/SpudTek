@@ -44,9 +44,11 @@ transition_height = height - transition_length;
 slices = height * slices_per_mm;
 slice_thickness = height / slices;
 
+total_height = height + coupler_height;
+
 module tube() {
   // form tube using individual stacked slices every slice_thickness mm (z)
-  for (z = [0:slice_thickness:height - slice_thickness]) {
+  for (z = [0:slice_thickness:total_height - slice_thickness]) {
     // current twist angle for this specific height
     current_twist = z * degrees_per_mm;
 
@@ -62,8 +64,11 @@ module tube() {
             // outer radius
             circle(r=(z > marker_height) ? outer_radius : marker_outer_radius);
 
-            // inner spiked radius
-            spiked_circle(inner_radius, current_depth, spike_power);
+            // if we are at coupler height, just do a circle, otherwise do some rifles
+            if(z >= height)
+              circle(r=coupler_inner_radius);
+            else
+              spiked_circle(inner_radius, current_depth, spike_power);
           }
         }
   }
@@ -110,6 +115,35 @@ module marker_text(str_val, radius, rotation, font, font_size, font_spacing, dep
   }
 }
 
+// Curved text module aligned and un-mirrored for the bottom face
+module marker_flat_text(str_val, radius, rotation = 0, font = "", font_size = 5, font_spacing = 0.6, extrude_height = 1) {
+    num_chars = len(str_val);
+
+    // Calculate arc angle per character
+    char_width_approx = font_size * font_spacing;
+    step_angle = (char_width_approx / radius) * (180 / PI);
+
+    start_angle = -(num_chars - 1) * step_angle / 2;
+
+    for (i = [0 : num_chars - 1]) {
+        // Advance angle forward for left-to-right reading
+        angle = start_angle + (i * step_angle);
+
+        rotate([0, 0, angle + rotation])
+            translate([radius, 0, 0])
+                rotate([0, 0, -90])
+                    linear_extrude(height = extrude_height, convexity = 10)
+                        mirror([1, 0, 0]) // Un-mirrors 2D text when viewed from underneath
+                            text(
+                                str(str_val[i]),
+                                size = font_size,
+                                halign = "center",
+                                valign = "center",
+                                font = font
+                            );
+    }
+}
+
 module marker() {
   intersection() {
     // rendered text
@@ -136,8 +170,11 @@ module coupler() {
 
 color("orange") {
   tube();
-  coupler();
+  //coupler();
 }
 
 color("white")
+{
   marker();
+  marker_flat_text("THEY CALL ME TATER SALAD", marker_outer_radius - 3.5, 0, serial_font, serial_font_size, serial_font_spacing);
+}
