@@ -9,19 +9,19 @@ inner_radius = 35 / 2; // sleeve inside diameter / 2
 spike_depth = 3; // How deep the spikes go inward (at maximum)
 
 marker_height = 10; // How long the marker is at the end of the barrel
-marker_outer_radius = 48 / 2;
+marker_outer_radius = 48.5 / 2;
 
 coupler_height = 10; // How tall from the inside end of the tube will the coupler section be?
 coupler_inner_radius = 38.2 / 2; // outside diameter of the tip of your shell
 
 // --- TEXT ---
-text_depth = 0.5;
+text_depth = 2;
 text_protrusion = 0.05;
 
 // serial number (git version)
 serial_text = GIT_VERSION;
 serial_rotation = 180;
-serial_font = "Bahnschrift";
+serial_font = "Dot Matrix";
 serial_font_size = 3.5;
 serial_font_spacing = 0.7;
 
@@ -29,7 +29,7 @@ serial_font_spacing = 0.7;
 brand_text = "SPUDTEK";
 brand_rotation = -70;
 brand_rotation2 = 70;
-brand_font = "Liberation Sans:style=Bold";
+brand_font = "Dot Matrix";
 brand_font_size = 6.4;
 brand_font_spacing = 0.75;
 
@@ -45,6 +45,7 @@ slices = height * slices_per_mm;
 slice_thickness = height / slices;
 
 total_height = height + coupler_height;
+echo("total_height=", total_height);
 
 module tube() {
   // form tube using individual stacked slices every slice_thickness mm (z)
@@ -89,7 +90,7 @@ module spiked_circle(R, A, power) {
 }
 
 // Curved radial text module wrapped around the outer wall
-module marker_text(str_val, radius, rotation, font, font_size, font_spacing, depth = text_depth, protrusion = text_protrusion) {
+module marker_side_text(str_val, radius, rotation, font, font_size, font_spacing, depth = text_depth, protrusion = text_protrusion) {
   num_chars = len(str_val);
 
   // Calculate arc angle per character based on average letter width (approx 0.6 * font_size)
@@ -102,9 +103,9 @@ module marker_text(str_val, radius, rotation, font, font_size, font_spacing, dep
     angle = start_angle + (i * step_angle);
 
     rotate([0, 0, angle + rotation])
-      translate([radius - 5, 0, (marker_height / 2) - (char_width_approx / 2)])
+      translate([radius - text_depth, 0, (marker_height / 2) - (char_width_approx / 2)])
         rotate([90, 0, 90])
-          linear_extrude(height=10, convexity=10)
+          linear_extrude(height=text_depth + text_protrusion, convexity=10)
             text(
               str(str_val[i]),
               size=font_size,
@@ -115,66 +116,58 @@ module marker_text(str_val, radius, rotation, font, font_size, font_spacing, dep
   }
 }
 
-// Curved text module aligned and un-mirrored for the bottom face
-module marker_flat_text(str_val, radius, rotation = 0, font = "", font_size = 5, font_spacing = 0.6, extrude_height = 1) {
+// Clean curved text for the bottom face with valid 3D normals
+module marker_front_text(str_val, radius, rotation = 0, font = "", font_size = 5, font_spacing = 0.6, depth = 1, direction=1) {
     num_chars = len(str_val);
 
-    // Calculate arc angle per character
     char_width_approx = font_size * font_spacing;
     step_angle = (char_width_approx / radius) * (180 / PI);
-
     start_angle = -(num_chars - 1) * step_angle / 2;
 
     for (i = [0 : num_chars - 1]) {
-        // Advance angle forward for left-to-right reading
         angle = start_angle + (i * step_angle);
 
         rotate([0, 0, angle + rotation])
-            translate([radius, 0, 0])
-                rotate([0, 0, -90])
-                    linear_extrude(height = extrude_height, convexity = 10)
-                        mirror([1, 0, 0]) // Un-mirrors 2D text when viewed from underneath
-                            text(
-                                str(str_val[i]),
-                                size = font_size,
-                                halign = "center",
-                                valign = "center",
-                                font = font
-                            );
+            translate([radius, 0, depth])
+                // Rotate 180 on X to view correctly from below without flipping 3D normals inside-out
+                rotate([180, 0, 90]) 
+                    linear_extrude(height = depth, convexity = 10)
+                        text(
+                            str(str_val[i]),
+                            size = font_size,
+                            halign = "center",
+                            valign = "center",
+                            font = font
+                        );
     }
 }
 
 module marker() {
-  intersection() {
-    // rendered text
-    union() {
-      marker_text(serial_text, marker_outer_radius, serial_rotation, serial_font, serial_font_size, serial_font_spacing);
-      marker_text(brand_text, marker_outer_radius, brand_rotation, brand_font, brand_font_size, brand_font_spacing);
-      marker_text(brand_text, marker_outer_radius, brand_rotation2, brand_font, brand_font_size, brand_font_spacing);
+  intersection(){
+    union(){
+      //marker_side_text(serial_text, marker_outer_radius, serial_rotation, serial_font, serial_font_size, serial_font_spacing);
+      //marker_side_text(brand_text, marker_outer_radius, brand_rotation, brand_font, brand_font_size, brand_font_spacing);
+      //marker_side_text(brand_text, marker_outer_radius, brand_rotation2, brand_font, brand_font_size, brand_font_spacing);
     }
-    // cut to desired text thickness with a tube
-    difference() {
-      cylinder(h=marker_height, r=marker_outer_radius + text_protrusion);
-      cylinder(h=marker_height, r=marker_outer_radius - text_depth);
-    }
+
+
+        // cut to desired text thickness with a tube
+    //difference() {
+    //  cylinder(h=marker_height, r=marker_outer_radius + text_protrusion);
+    //  cylinder(h=marker_height, r=marker_outer_radius - text_depth);
+    //}
   }
+
+    marker_front_text(serial_text, marker_outer_radius - 3.5, rotation=0, serial_font, serial_font_size, font_spacing=0.85, depth=text_depth);
+    marker_front_text(brand_text, marker_outer_radius - 3.5, rotation=180, brand_font, serial_font_size, font_spacing=0.85, depth=text_depth, direction=-1);
 }
 
-module coupler() {
-  translate([0, 0, height])
-    difference() {
-      cylinder(h=coupler_height, r=outer_radius);
-      cylinder(h=coupler_height, r=coupler_inner_radius);
-    }
-}
+
 
 color("orange") {
   tube();
-  //coupler();
 }
 
-color("white")
-{
+color("white") {
   marker();
-  marker_flat_text("THEY CALL ME TATER SALAD", marker_outer_radius - 3.5, 0, serial_font, serial_font_size, serial_font_spacing);
 }
