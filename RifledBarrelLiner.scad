@@ -1,12 +1,20 @@
 include <GIT_VERSION.scad>
 echo("GIT_BUILD", GIT_BUILD);
 
+function strtoupper(string) = chr([
+    for (s = string) 
+    let (c = ord(s)) 
+    (c >= 97 && c <= 122) ? c - 32 : c
+]);
+
+
+
 // --- CONFIGURABLE PARAMETERS --- 
 $fn = 300; // Smoothness of the circle (number of fragments)
 height = 205; // Total height of the tube (X height) including marker
 outer_radius = 41.1 / 2; // sleeve outside diameter / 2
 inner_radius = 35 / 2; // sleeve inside diameter / 2
-spike_depth = 3; // How deep the spikes go inward (at maximum)
+spike_depth = 2; // How deep the spikes go inward (at maximum)
 
 marker_height = 10; // How long the marker is at the end of the barrel
 marker_outer_radius = 48.5 / 2;
@@ -19,18 +27,18 @@ text_depth = 2;
 text_protrusion = 0.05;
 
 // serial number (git version)
-serial_text = GIT_VERSION;
+serial_text = strtoupper(GIT_VERSION);;
 serial_rotation = 180;
-serial_font = "Dot Matrix";
-serial_font_size = 3.5;
+serial_font = "Bahnschrift:style=Bold";
+serial_font_size = 3;
 serial_font_spacing = 0.7;
 
 // branding
 brand_text = "SPUDTEK";
 brand_rotation = -70;
 brand_rotation2 = 70;
-brand_font = "Dot Matrix";
-brand_font_size = 6.4;
+brand_font = "Bahnschrift:style=Bold";
+brand_font_size = 4.5;
 brand_font_spacing = 0.75;
 
 // -- advanced --
@@ -60,7 +68,7 @@ module tube() {
     // extrude and position this specific thin slice
     translate([0, 0, z])
       rotate([0, 0, current_twist])
-        linear_extrude(height=slice_thickness, convexity=10) {
+        linear_extrude(height=slice_thickness, convexity=100) {
           difference() {
             // outer radius
             circle(r=(z > marker_height) ? outer_radius : marker_outer_radius);
@@ -105,7 +113,7 @@ module marker_side_text(str_val, radius, rotation, font, font_size, font_spacing
     rotate([0, 0, angle + rotation])
       translate([radius - text_depth, 0, (marker_height / 2) - (char_width_approx / 2)])
         rotate([90, 0, 90])
-          linear_extrude(height=text_depth + text_protrusion, convexity=10)
+          linear_extrude(height=text_depth + text_protrusion, convexity=100)
             text(
               str(str_val[i]),
               size=font_size,
@@ -128,7 +136,7 @@ module marker_front_text(str_val, radius, rotation = 0, font = "", font_size = 5
         angle = start_angle + (i * step_angle);
 
         rotate([0, 0, angle + rotation])
-            translate([radius, 0, depth])
+            translate([radius, 0, depth-0.01])
                 // Rotate 180 on X to view correctly from below without flipping 3D normals inside-out
                 rotate([180, 0, 90]) 
                     linear_extrude(height = depth, convexity = 10)
@@ -136,7 +144,7 @@ module marker_front_text(str_val, radius, rotation = 0, font = "", font_size = 5
                             str(str_val[i]),
                             size = font_size,
                             halign = "center",
-                            valign = "center",
+                            valign = "baseline",
                             font = font
                         );
     }
@@ -158,14 +166,26 @@ module marker() {
     //}
   }
 
-    marker_front_text(serial_text, marker_outer_radius - 3.5, rotation=0, serial_font, serial_font_size, font_spacing=0.85, depth=text_depth);
-    marker_front_text(brand_text, marker_outer_radius - 3.5, rotation=180, brand_font, serial_font_size, font_spacing=0.85, depth=text_depth, direction=-1);
+    marker_front_text(serial_text, inner_radius + 1.5, rotation=0, serial_font, serial_font_size, font_spacing=0.85, depth=text_depth);
+    marker_front_text(brand_text, inner_radius + 0.7, rotation=180, brand_font, brand_font_size, font_spacing=0.85, depth=text_depth, direction=-1);
 }
 
 
+module cylinder_chamfer(radius, size){
+    difference(){
 
-color("orange") {
-  tube();
+        cylinder(h=size, r=radius);
+        cylinder(h=size, r1=radius-size,r2=radius);
+    }
+}
+
+
+color("red") {
+  difference()
+  {
+    tube();
+    cylinder_chamfer(marker_outer_radius, 1);
+  }
 }
 
 color("white") {
