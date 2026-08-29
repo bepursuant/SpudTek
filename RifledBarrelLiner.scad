@@ -31,8 +31,8 @@ text_protrusion = 0.05;
 // serial number (git version)
 serial_text = strtoupper(GIT_VERSION);;
 serial_rotation = 180;
-serial_font = "osifont";
-serial_font_size = 3;
+serial_font = "Bahnschrift";
+serial_font_size = 4;
 serial_font_spacing = 0.7;
 
 // branding
@@ -141,8 +141,9 @@ module cylinder_bottom_chamfer(radius, size){
   }
 }
 
-module cylinder_top_chamfer(radius, size){
-  cylinder(h=size+0.1, r1=radius-size, r2=radius);
+module cylinder_top_chamfer(radius, size, height){
+  translate([0, 0, height-size])
+    cylinder(h=size+0.1, r1=radius-size, r2=radius);
 }
 
 
@@ -152,9 +153,8 @@ color("red")
   {
     tube();
     cylinder_bottom_chamfer(marker_outer_radius, marker_chamfer_size);
-
-    translate([0, 0, total_height-coupler_chamfer_size])
-      cylinder_top_chamfer(outer_radius, coupler_chamfer_size);
+    cylinder_top_chamfer(outer_radius, coupler_chamfer_size, total_height);
+    cylinder_top_chamfer(coupler_inner_radius, 2, height);
   }
 }
 
