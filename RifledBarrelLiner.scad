@@ -47,7 +47,7 @@ brand_font_spacing = 0.75;
 degrees_per_mm = 0.75; // spike degrees to twist for every 1mm of height
 spike_power = 300; // Higher number = narrower/pointier needles  
 transition_length = 0.33 * height; // how long is the spike transition
-slices_per_mm = 2;
+slices_per_mm = 12;
 
 // --- CALCULATION FOR TRANSITION ---
 transition_height = height - transition_length;
