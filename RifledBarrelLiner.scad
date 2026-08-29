@@ -20,7 +20,7 @@ marker_height = 6; // How long the marker is at the end of the barrel
 marker_outer_radius = 48.5 / 2;
 marker_chamfer_size = 1.5;
 
-coupler_height = 10; // How tall from the inside end of the tube will the coupler section be?
+coupler_height = 30; // How tall from the inside end of the tube will the coupler section be?
 coupler_inner_radius = 38.2 / 2; // outside diameter of the tip of your shell
 coupler_chamfer_size = 2;
 
@@ -99,33 +99,6 @@ module spiked_circle(R, A, power) {
   );
 }
 
-// Curved radial text module wrapped around the outer wall
-module marker_side_text(str_val, radius, rotation, font, font_size, font_spacing, depth = text_depth, protrusion = text_protrusion) {
-  num_chars = len(str_val);
-
-  // Calculate arc angle per character based on average letter width (approx 0.6 * font_size)
-  char_width_approx = font_size * font_spacing;
-  step_angle = (char_width_approx / radius) * (180 / PI);
-
-  start_angle = -(num_chars - 1) * step_angle / 2; // Center string at angle 0
-
-  for (i = [0:num_chars - 1]) {
-    angle = start_angle + (i * step_angle);
-
-    rotate([0, 0, angle + rotation])
-      translate([radius - text_depth, 0, (marker_height / 2) - (char_width_approx / 2)])
-        rotate([90, 0, 90])
-          linear_extrude(height=text_depth + text_protrusion, convexity=100)
-            text(
-              str(str_val[i]),
-              size=font_size,
-              halign="center",
-              valign="baseline",
-              font=font
-            );
-  }
-}
-
 // Clean curved text for the bottom face with valid 3D normals
 module marker_front_text(str_val, radius, rotation = 0, font = "", font_size = 5, font_spacing = 0.6, depth = 1, direction=1) {
     num_chars = len(str_val);
@@ -153,19 +126,6 @@ module marker_front_text(str_val, radius, rotation = 0, font = "", font_size = 5
 }
 
 module marker() {
-  // intersection(){
-  //   union(){
-  //     marker_side_text(serial_text, marker_outer_radius, serial_rotation, serial_font, serial_font_size, serial_font_spacing);
-  //     marker_side_text(brand_text, marker_outer_radius, brand_rotation, brand_font, brand_font_size, brand_font_spacing);
-  //     marker_side_text(brand_text, marker_outer_radius, brand_rotation2, brand_font, brand_font_size, brand_font_spacing);
-  //   }
-  //   // cut to desired text thickness with a tube
-  //   difference() {
-  //     cylinder(h=marker_height, r=marker_outer_radius + text_protrusion);
-  //     cylinder(h=marker_height, r=marker_outer_radius - text_depth);
-  //   }
-  // }
-
     text_center_radius = inner_radius + ((marker_outer_radius - marker_chamfer_size)-inner_radius)/2;
     marker_front_text(brand_text, text_center_radius, rotation=0, brand_font, brand_font_size, font_spacing=0.85, depth=text_depth);
     marker_front_text(serial_text, text_center_radius, rotation=0, serial_font, serial_font_size, font_spacing=0.85, depth=text_depth, direction=-1);
