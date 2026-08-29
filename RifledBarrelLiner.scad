@@ -16,11 +16,13 @@ outer_radius = 41.1 / 2; // sleeve outside diameter / 2
 inner_radius = 35 / 2; // sleeve inside diameter / 2
 spike_depth = 2; // How deep the spikes go inward (at maximum)
 
-marker_height = 10; // How long the marker is at the end of the barrel
+marker_height = 6; // How long the marker is at the end of the barrel
 marker_outer_radius = 48.5 / 2;
+marker_chamfer_size = 1.5;
 
 coupler_height = 10; // How tall from the inside end of the tube will the coupler section be?
 coupler_inner_radius = 38.2 / 2; // outside diameter of the tip of your shell
+coupler_chamfer_size = 2;
 
 // --- TEXT ---
 text_depth = 2;
@@ -29,7 +31,7 @@ text_protrusion = 0.05;
 // serial number (git version)
 serial_text = strtoupper(GIT_VERSION);;
 serial_rotation = 180;
-serial_font = "Bahnschrift:style=Bold";
+serial_font = "osifont";
 serial_font_size = 3;
 serial_font_spacing = 0.7;
 
@@ -38,7 +40,7 @@ brand_text = "SPUDTEK";
 brand_rotation = -70;
 brand_rotation2 = 70;
 brand_font = "Bahnschrift:style=Bold";
-brand_font_size = 4.5;
+brand_font_size = 4;
 brand_font_spacing = 0.75;
 
 // -- advanced --
@@ -130,13 +132,13 @@ module marker_front_text(str_val, radius, rotation = 0, font = "", font_size = 5
 
     char_width_approx = font_size * font_spacing;
     step_angle = (char_width_approx / radius) * (180 / PI);
-    start_angle = -(num_chars - 1) * step_angle / 2;
+    start_angle = -1*(direction)*(num_chars - 1) * step_angle / 2;
 
     for (i = [0 : num_chars - 1]) {
-        angle = start_angle + (i * step_angle);
+        angle = start_angle + (direction * i * step_angle);
 
         rotate([0, 0, angle + rotation])
-            translate([radius, 0, depth-0.01])
+            translate([direction * radius, 0, depth-0.01])
                 // Rotate 180 on X to view correctly from below without flipping 3D normals inside-out
                 rotate([180, 0, 90]) 
                     linear_extrude(height = depth, convexity = 10)
@@ -144,50 +146,62 @@ module marker_front_text(str_val, radius, rotation = 0, font = "", font_size = 5
                             str(str_val[i]),
                             size = font_size,
                             halign = "center",
-                            valign = "baseline",
+                            valign = "center",
                             font = font
                         );
     }
 }
 
 module marker() {
-  intersection(){
-    union(){
-      //marker_side_text(serial_text, marker_outer_radius, serial_rotation, serial_font, serial_font_size, serial_font_spacing);
-      //marker_side_text(brand_text, marker_outer_radius, brand_rotation, brand_font, brand_font_size, brand_font_spacing);
-      //marker_side_text(brand_text, marker_outer_radius, brand_rotation2, brand_font, brand_font_size, brand_font_spacing);
-    }
+  // intersection(){
+  //   union(){
+  //     marker_side_text(serial_text, marker_outer_radius, serial_rotation, serial_font, serial_font_size, serial_font_spacing);
+  //     marker_side_text(brand_text, marker_outer_radius, brand_rotation, brand_font, brand_font_size, brand_font_spacing);
+  //     marker_side_text(brand_text, marker_outer_radius, brand_rotation2, brand_font, brand_font_size, brand_font_spacing);
+  //   }
+  //   // cut to desired text thickness with a tube
+  //   difference() {
+  //     cylinder(h=marker_height, r=marker_outer_radius + text_protrusion);
+  //     cylinder(h=marker_height, r=marker_outer_radius - text_depth);
+  //   }
+  // }
 
-
-        // cut to desired text thickness with a tube
-    //difference() {
-    //  cylinder(h=marker_height, r=marker_outer_radius + text_protrusion);
-    //  cylinder(h=marker_height, r=marker_outer_radius - text_depth);
-    //}
-  }
-
-    marker_front_text(serial_text, inner_radius + 1.5, rotation=0, serial_font, serial_font_size, font_spacing=0.85, depth=text_depth);
-    marker_front_text(brand_text, inner_radius + 0.7, rotation=180, brand_font, brand_font_size, font_spacing=0.85, depth=text_depth, direction=-1);
+    text_center_radius = inner_radius + ((marker_outer_radius - marker_chamfer_size)-inner_radius)/2;
+    marker_front_text(brand_text, text_center_radius, rotation=0, brand_font, brand_font_size, font_spacing=0.85, depth=text_depth);
+    marker_front_text(serial_text, text_center_radius, rotation=0, serial_font, serial_font_size, font_spacing=0.85, depth=text_depth, direction=-1);
 }
 
 
-module cylinder_chamfer(radius, size){
+module cylinder_bottom_chamfer(radius, size){
+  translate([0, 0, -0.1]){
     difference(){
-
-        cylinder(h=size, r=radius);
-        cylinder(h=size, r1=radius-size,r2=radius);
+        cylinder(h=size+0.1, r=radius+0.1);
+        cylinder(h=size+0.1, r1=radius-size,r2=radius);
     }
+  }
+}
+
+module cylinder_top_chamfer(radius, size){
+  cylinder(h=size+0.1, r1=radius-size, r2=radius);
 }
 
 
-color("red") {
+color("red")
+{
   difference()
   {
     tube();
-    cylinder_chamfer(marker_outer_radius, 1);
+    cylinder_bottom_chamfer(marker_outer_radius, marker_chamfer_size);
+
+    translate([0, 0, total_height-coupler_chamfer_size])
+      cylinder_top_chamfer(outer_radius, coupler_chamfer_size);
   }
 }
 
-color("white") {
+color("white")
+{
   marker();
 }
+
+
+
