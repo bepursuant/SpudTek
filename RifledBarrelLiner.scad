@@ -11,7 +11,7 @@ function strtoupper(string) = chr([
 
 // --- CONFIGURABLE PARAMETERS --- 
 $fn = 300; // Smoothness of the circle (number of fragments)
-height = 205; // Total height of the tube (X height) including marker
+height = 201; // Total height of the tube (X height) including marker
 outer_radius = 41.1 / 2; // sleeve outside diameter / 2
 inner_radius = 35 / 2; // sleeve inside diameter / 2
 spike_depth = 2; // How deep the spikes go inward (at maximum)
@@ -20,7 +20,7 @@ marker_height = 6; // How long the marker is at the end of the barrel
 marker_outer_radius = 48.5 / 2;
 marker_chamfer_size = 1.5;
 
-coupler_height = 30; // How tall from the inside end of the tube will the coupler section be?
+coupler_height = 35; // How tall from the inside end of the tube will the coupler section be?
 coupler_inner_radius = 38.2 / 2; // outside diameter of the tip of your shell
 coupler_chamfer_size = 2;
 
